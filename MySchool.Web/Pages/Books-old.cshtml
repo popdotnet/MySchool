@@ -1,0 +1,134 @@
+﻿@{
+    var departId = Request["departId"];
+    if (departId == null)
+    {
+        departId = "0";
+    }
+
+
+    var bookId = Request["bookId"];
+
+    var chId = Request["chId"];
+
+
+    BookBal bookBal = new BookBal();
+    BookEntity bookData = null;
+
+    BookPartBal bookPartBal = new BookPartBal();
+    List<BookPartEntity> bookPartLst = null;
+
+    ChapterBal chapterBal = new ChapterBal();
+
+    //--------------------pop----
+    if (bookId != null)
+    {
+        bookData = bookBal.GetData(bookId.AsInt());
+        if (bookData != null)
+        {
+            Page.Title = bookData.Name_En;
+            bookPartLst = bookPartBal.GetList(bookId.AsInt());
+        }
+
+    }
+
+
+    Layout = Href("~/Shared/_Layout.cshtml");
+}
+
+<style>
+    .chapter
+    {
+
+    }
+    .chapter .title
+    {
+        color:#ff0000;
+        text-align:center;
+    }
+    .lesson {
+        width: 100%;
+    }
+
+        .lesson .section {
+            padding-top:20px;
+            padding-bottom:20px;
+        }
+
+        .lesson .section h2:first-child {
+            color:blue;
+            text-align:left;
+        }
+        .lesson .section iframe {
+            display: block;
+            margin: 0 auto;
+            width:800px;
+            height:450px;
+            padding-top:15px;
+            padding-bottom:15px;
+        }
+
+    .section {
+        width: 100%;
+    }
+
+
+    .selectedLeson {
+        color: white;
+        background-color: gray;
+    }
+</style>
+
+@section endPageScript{
+    <script type="text/javascript">
+        var $container = $("html,body");
+        var $scrollTo = $('.selectedLeson');
+
+
+        $(document).ready(function () {
+            $container.animate({ scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop() - 100, scrollLeft: 0 }, 300);
+        });
+    </script>
+}
+
+
+<div class="row chapter">
+    <div class="col-md-2">
+
+        @if (bookPartLst != null)
+        {
+            foreach (var itm in bookPartLst)
+            {
+                <h4>@itm.Name_En</h4>
+
+                List<ChapterEntity> chapterLst = chapterBal.GetList(itm.Id);
+
+                if (chapterLst != null)
+                {
+                    <ul>
+                        @foreach (var ch in chapterLst)
+                        {
+                            <li><a href="@Href("~/Pages/Books?bookId="+itm.BookData.Id+"&departId="+departId+"&chId="+ch.Id+"")" @(chId != null && chId.AsInt() == ch.Id ? "class=selectedLeson" : "" )>@ch.Name_En</a></li>
+                        }
+
+                    </ul>
+                }
+
+
+
+            }
+        }
+    </div>
+    <div class="col-md-10">
+        @if (chId != null)
+        {
+            var chCont = chapterBal.GetData(chId.AsInt());
+
+            if (chCont != null)
+            {
+              <h1  class="title">@chCont.Name_En</h1>  
+               @Html.Raw(chCont.Cont)
+            }
+
+        }
+    </div>
+</div>

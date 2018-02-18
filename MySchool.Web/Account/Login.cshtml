@@ -1,0 +1,181 @@
+﻿@{
+
+    Page.Title = "Log In";
+
+    if (WebSecurity.IsAuthenticated )
+    {
+        Response.Redirect("~/");
+    }
+    var username = Request.Form["username"];
+    var password = Request.Form["password"];
+    var rememberMe = false;
+
+    if (IsPost)
+    {
+        rememberMe = Request.Form["rememberMe"].AsBool();
+
+        if (username.IsEmpty())
+        {
+            ModelState.AddError("username", "You must specify a username.");
+        }
+
+        if (password.IsEmpty())
+        {
+            ModelState.AddError("password", "You must provide your password");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ModelState.AddFormError(@"Please fix the errors below before resubmitting the form");
+        }
+        else
+        {
+
+            if (WebSecurity.Login(username, password, rememberMe))
+            {
+                Functions.SetLoginCoockie(true);
+
+                //-------------------------------------
+                try
+                {
+                    var message = "<p>" + username + " Is Login Now</p>";
+                    WebMail.Send(to: "ihabnew@gmail.com", subject: "New Login At Nr-Tasks", body: message, isBodyHtml: true);
+                }
+                catch (Exception ex)
+                {
+
+                }
+                //-------------------------------------
+
+
+                var returnUrl = Request.QueryString["ReturnUrl"];
+                if (returnUrl.IsEmpty())
+                {
+                    Response.Redirect("~/");
+                }
+                else
+                {
+                    Context.RedirectLocal(returnUrl);
+                }
+            }
+            else
+            {
+                ModelState.AddError("credentials", "Your credentials did not match a valid account. Please try again");
+            }
+        }
+    }
+
+}
+
+@section head{
+
+    <style>
+        .panel-heading {
+            padding-top: 15px !important;
+            height: 50px;
+            color: white !important;
+            background-color: lightblue !important;
+            text-align: center;
+            
+        }
+
+        .panel-footer {
+            padding: 1px 15px;
+            color: #A0A0A0;
+        }
+
+        .profile-img {
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 10px;
+            display: block;
+            -moz-border-radius: 50%;
+            -webkit-border-radius: 50%;
+            border-radius: 50%;
+        }
+    </style>
+
+}
+
+@*<div class="row">
+        <div class="col-md-12 col-centered">
+
+            <p>
+                Please enter your username and password below. If you don’t have an account,
+                visit the <a href="@Href("~/Account/Register")">registration page</a> and
+                create one.
+            </p>
+
+
+        </div>
+    </div>*@
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-md-offset-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong> Log in to continue</strong>
+                </div>
+                <div class="panel-body">
+                    <form role="form" action="#" method="POST">
+                        <fieldset>
+                            <div class="row">
+                                <div class="center-block">
+                                    <img class="profile-img"
+                                         src="~/images/UserLogIn.png" alt="">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 col-md-10  col-md-offset-1 ">
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon">
+                                                <i class="glyphicon glyphicon-user"></i>
+                                            </span>
+                                            <input id="username" name="username" value="@username" class="form-control" placeholder="Username" type="text" autofocus>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon">
+                                                <i class="glyphicon glyphicon-lock"></i>
+                                            </span>
+                                            <input class="form-control" id="password" name="password" placeholder="Password" type="password" value="" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+
+                                        <div class="input-group">
+                                            <input type="checkbox" name="rememberMe" value="true"
+                                                   @(rememberMe ? "checked=\"checked\"" : string.Empty) />
+                                            <label for="rememberMe">Remember Me</label><a href="@Href(@"~/Account/ForgotPassword.cshtml")" class="pull-right" style="padding-left:35px;color:brown;">Forget Password</a>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.ValidationMessage("username")
+                                        <br />
+                                        @Html.ValidationMessage("password")
+                                        <br />
+                                        @Html.ValidationMessage("credentials")
+                                    </div>
+
+                                    <div class="form-group">
+                                        <input type="submit" class="btn btn-lg btn-primary btn-block" value="Sign in">
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="panel-footer ">
+                    @*Don't have an account! <a href="#" onClick=""> Sign Up Here </a>*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

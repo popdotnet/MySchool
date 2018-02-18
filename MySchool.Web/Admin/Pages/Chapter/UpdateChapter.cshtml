@@ -1,0 +1,328 @@
+﻿@{
+    Page.Title = "Update Chapter";
+
+    var departmentId = Request["departmentId"];
+    var catId = Request["catId"];
+    var bookId = Request["bookId"];
+    var partId = Request["partId"];
+    var edit = Request.Unvalidated("edit");
+
+    //----Department List
+    DepartmentBal departBal = new DepartmentBal();
+    var departLst = departBal.GetList();
+    if (departLst != null)
+    {
+        departLst = departLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Category List
+    CatBal catBal = new CatBal();
+    var catLst = catBal.GetList(departmentId.AsInt());
+    if (catLst != null)
+    {
+        catLst = catLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Book List
+    BookBal bookBal = new BookBal();
+    var bookLst = bookBal.GetList(catId.AsInt());
+    if (bookLst != null)
+    {
+        bookLst = (from u in bookLst orderby u.CatData.Name_En, u.Name_En select u).ToList();
+    }
+
+    //----Parts List
+    BookPartBal partBal = new BookPartBal();
+    var partLst = partBal.GetList(bookId.AsInt());
+    if (partLst != null)
+    {
+        partLst = partLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Chapters List
+    ChapterBal chapterBal = new ChapterBal();
+    List<ChapterEntity> lst = chapterBal.GetList();
+    if (lst != null)
+    {
+        lst = (from u in lst orderby u.Name_En select u).ToList();
+        lst.ForEach(u => u.BookPartData.GetData());
+        lst = lst.FindAll(u => u.BookPartData.BookData.Id == bookId.AsInt());
+    }
+
+    var data = new ChapterEntity();
+
+    if (Request["chapterId"].AsInt() > 0)
+    {
+
+        if (IsPost)
+        {
+            if (Request["chapterName"].IsEmpty())
+            {
+                ModelState.AddError("chapterName", "Required");
+            }
+
+            if (partId.IsEmpty())
+            {
+                ModelState.AddError("partId", "Required");
+            }
+
+            if (edit == null || edit.ToString() == "")
+            {
+                ModelState.AddError("edit", "Required");
+            }
+
+
+            if (ModelState.IsValid)
+            {
+                data.Id = Request["chapterId"].AsInt();
+                data.Name_Ar = Request["chapterName"].ToString();
+                data.Name_En = Request["chapterName"].ToString();
+                if (!partId.IsEmpty())
+                {
+                    data.BookPartData.Id = partId.AsInt();
+                }
+
+                if (edit != null)
+                {
+
+                    data.Cont = Request.Unvalidated("edit").ToString();
+
+                }
+
+                data.MadeById = WebSecurity.CurrentUserId;
+
+                chapterBal.Update(Request["chapterId"].AsInt(), data);
+                Response.Redirect(Request.RawUrl);
+            }
+        }
+        else
+        {
+            data = chapterBal.GetData(Request["chapterId"].AsInt());
+            if (data != null)
+            {
+                partId = data.BookPartData.Id.ToString();
+                edit = data.Cont;
+            }
+
+        }
+
+
+
+    }
+
+
+
+}
+
+@section head{
+
+
+    <script src="~/Content/ckeditor/ckeditor.js"></script>
+    <script src="~/Content/ckfinder/ckfinder.js"></script>
+}
+
+<div class="row">
+    <form class="form-horizontal">
+        <fieldset>
+            <legend>Select Chapter</legend>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Department</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="departmentId" class="form-control" onchange="this.form.submit()">
+                        <option value="">None</option>
+                        @if (departLst != null)
+                        {
+                            foreach (var itm in departLst)
+                            {
+                                <option value="@itm.Id" @( departmentId != null && departmentId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("catId")
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Category</label>
+                </div>
+
+                <div class="col-md-6">
+                    <select name="catId" class="form-control" onchange="this.form.submit()">
+                        <option value="">None</option>
+                        @if (catLst != null)
+                        {
+                            foreach (var itm in catLst)
+                            {
+                                <option value="@itm.Id" @( catId != null && catId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("catId")
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-2 text-left">
+                    <label class="control-label " style="float:left;">Select Book:</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="bookId" class="form-control" onchange="this.form.submit()">
+                        <option value="">Pick one</option>
+                        @if (bookLst != null)
+                        {
+                            foreach (var itm in bookLst)
+                            {
+                                <option value="@itm.Id.ToString()" @Helpers.Selected("bookId", itm.Id.ToString())>@itm.Name_En</option>
+                            }
+
+                        }
+
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("bookId")
+                </div>
+                
+            </div>
+            <div class="form-group">
+                <div class="col-md-2 text-left">
+                    <label class="control-label " style="float:left;">Select Chapter:</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="chapterId" class="form-control" onchange="this.form.submit()">
+                        <option value="">Pick one</option>
+                        
+                        @if (partLst != null)
+                        {
+                            foreach (var itm in partLst)
+                            {
+                                <optgroup label="@itm.Name_En">
+                                    @{
+                                        List<ChapterEntity> chapLst = (from u in lst where u.BookPartData.Id == itm.Id select u).ToList();
+                                        if (chapLst != null)
+                                        {
+                                            foreach (var ch in chapLst)
+                                            {
+                                                <option value="@ch.Id.ToString()" @Helpers.Selected("chapterId", ch.Id.ToString())>@ch.Name_En</option>
+                                            }
+
+                                        }
+                                    }
+                                </optgroup>
+                            }
+
+                        }
+                        @*@if (lst != null)
+                        {
+                            foreach (var itm in lst)
+                            {
+                                <option value="@itm.Id.ToString()" @Helpers.Selected("chapterId", itm.Id.ToString())>@itm.Name_En</option>
+                            }
+
+                        }*@
+
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    @Html.ValidationMessage("chapterId")
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-default" style="float:right;">View Data</button>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<div class="row">
+    <form method="post" class="form-horizontal">
+        <fieldset>
+            <legend>Update Chapter</legend>
+
+            <div class="form-group">
+                <div class="col-md-2 text-left">
+                    <label class="control-label" style="float:left;">Chapter Name:</label>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="chapterName" name="chapterName" class="form-control" maxlength="250" placeholder="Enter Chapter Name" value="@data.Name_En" />
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("chapterName")
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Part:</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="partId" class="form-control">
+                        <option value="">None</option>
+                        @if (partLst != null)
+                        {
+                            foreach (var itm in partLst)
+                            {
+                                <option value="@itm.Id" @( partId != null && partId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("partId")
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Content</label>
+                </div>
+                <div class="col-md-9">
+                    <textarea id="edit" name="edit" rows="50">
+                        @if (edit != null)
+                        {
+                            @*@Html.Raw(Request.Unvalidated("edit").ToString())*@
+                            //@Html.Raw(edit.ToString())
+                           <text>@edit.ToString()</text>
+                        }
+
+                    </textarea>
+
+
+                </div>
+                <div class="col-md-1">
+                    @Html.ValidationMessage("edit")
+                </div>
+            </div>
+
+
+
+            <div class="form-group">
+
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-default" style="float:right;">Update</button>
+                </div>
+                <div class="col-md-4">
+
+                </div>
+
+            </div>
+
+
+
+        </fieldset>
+    </form>
+</div>
+
+
+
+<script>
+    CKEDITOR.replace("edit", { customConfig: "/Content/ckeditor/config.js" });
+
+    CKFinder.setupCKEditor(edit);
+    
+</script>

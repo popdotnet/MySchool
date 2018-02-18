@@ -1,0 +1,160 @@
+﻿@{
+    Page.Title = "Update Book";
+
+
+    var bookId = Request["bookId"];
+
+
+    BookBal bookBal = new BookBal();
+    var bookLst = bookBal.GetList();
+    if (bookLst != null)
+    {
+        bookLst = bookLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    BookPartBal bookPartBal = new BookPartBal();
+    List<BookPartEntity> lst = bookPartBal.GetList();
+    if (lst != null)
+    {
+        lst = (from u in lst orderby u.Name_En select u).ToList();
+    }
+
+    var data = new BookPartEntity();
+
+    if (Request["bookPartId"].AsInt() > 0)
+    {
+
+        if (IsPost)
+        {
+            if (Request["bookPartName"].IsEmpty())
+            {
+                ModelState.AddError("bookPartName", "Required");
+            }
+
+            if (bookId.IsEmpty())
+            {
+                ModelState.AddError("bookId", "Required");
+            }
+
+            if (ModelState.IsValid)
+            {
+                data.Id = Request["bookPartId"].AsInt();
+                data.Name_Ar = Request["bookPartName"].ToString();
+                data.Name_En = Request["bookPartName"].ToString();
+                if (!bookId.IsEmpty())
+                {
+                    data.BookData.Id = bookId.AsInt();
+                }
+
+                data.MadeById = WebSecurity.CurrentUserId;
+
+                bookPartBal.Update(Request["bookPartId"].AsInt(), data);
+                Response.Redirect(Request.RawUrl);
+            }
+        }
+        else
+        {
+            data = bookPartBal.GetData(Request["bookPartId"].AsInt());
+            if (data != null)
+            {
+                bookId = data.BookData.Id.ToString();
+            }
+
+        }
+
+
+
+    }
+
+
+
+}
+
+<form class="form-horizontal">
+    <fieldset>
+        <legend>Select Book Part</legend>
+        <div class="form-group">
+            <div class="col-md-2 text-left">
+                <label class="control-label " style="float:left;">Select Book Part:</label>
+            </div>
+            <div class="col-md-2">
+                <select name="bookPartId" class="form-control" onchange="this.form.submit()">
+                    <option value="">Pick one</option>
+                    @if (lst != null)
+                    {
+                        foreach (var itm in lst)
+                        {
+                            <option value="@itm.Id.ToString()" @Helpers.Selected("bookPartId", itm.Id.ToString())>@itm.Name_En</option>
+                        }
+
+                    }
+
+                </select>
+            </div>
+            <div class="col-md-6">
+                @Html.ValidationMessage("bookPartId")
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-default" style="float:right;">View Data</button>
+            </div>
+        </div>
+    </fieldset>
+
+
+
+
+</form>
+
+<form method="post" class="form-horizontal">
+
+    <fieldset>
+        <legend>Update Book</legend>
+
+        <div class="form-group">
+            <div class="col-md-2 text-left">
+                <label class="control-label" style="float:left;">Book Part Name:</label>
+            </div>
+            <div class="col-md-6">
+                <input type="text" id="bookPartName" name="bookPartName" class="form-control" maxlength="250" placeholder="Enter Book Part Name" value="@data.Name_En" />
+            </div>
+            <div class="col-md-4">
+                @Html.ValidationMessage("bookPartName")
+            </div>
+
+        </div>
+        <div class="form-group">
+            <div class="col-md-2">
+                <label for="directManger">Book:</label>
+            </div>
+            <div class="col-md-6">
+                <select name="bookId" class="form-control">
+                    <option value="">None</option>
+                    @if (bookLst != null)
+                    {
+                        foreach (var itm in bookLst)
+                        {
+                            <option value="@itm.Id" @( bookId != null && bookId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                    }
+                </select>
+
+            </div>
+            <div class="col-md-4">
+                @Html.ValidationMessage("bookId")
+            </div>
+        </div>
+
+        <div class="form-group">
+
+            <div class="col-md-8">
+                <button type="submit" class="btn btn-default" style="float:right;">Update</button>
+            </div>
+            <div class="col-md-4">
+
+            </div>
+
+        </div>
+
+
+
+    </fieldset>
+</form>

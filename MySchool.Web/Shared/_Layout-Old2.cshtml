@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>@Page.Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="~/Scripts/jquery-3.2.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+
+
+    @RenderSection("head", required: false)
+    @RenderSection("script", required: false)
+
+    <style>
+        body {
+            padding-bottom: 40px;
+            padding-top: 60px;
+        }
+        @@media (min-width: 992px)
+        {
+            .sidebar-nav-fixed {
+                    position: fixed;
+            height:90%;
+            width: 14%;
+            overflow:auto;
+            float:left;
+            /*margin-bottom:100px;
+            padding-bottom:100px;*/
+        }
+        }
+       
+
+    </style>
+
+</head>
+<body>
+    @{
+
+        var departId = Request["departId"];
+
+        if (departId == null)
+        {
+            departId = "1";
+        }
+
+        DepartmentBal departmentBal = new DepartmentBal();
+        List<DepartmentEntity> departLst = departmentBal.GetList();
+
+        CatBal catBal = new CatBal();
+        BookBal bookBal = new BookBal();
+
+    }
+
+    @*https://www.bootply.com/101100*@
+    <div class="navbar navbar-fixed-top navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <form method="post" action="@Href("~/")">
+                    <ul class="nav navbar-nav">
+                        <li style="padding-top:10px;padding-bottom:0;">
+                            <select id="departId" name="departId" style="margin-top:5px;" onchange="this.form.submit();">
+                                @if (departLst != null)
+                                {
+                                    foreach (var itm in departLst)
+                                    {
+                                        <option @(departId != null && departId == itm.Id.ToString() ? "selected=\"selected\"" : "") value="@itm.Id">@itm.Name_En</option>
+                                    }
+                                }
+
+                            </select>
+                        </li>
+
+                        <li><a href="@Href("~/")">Home</a></li>
+
+                        @if (departId != null && departId.AsInt() > 0)
+                        {
+                            List<CatEntity> catLst = catBal.GetList(departId.AsInt());
+
+                            if (catLst != null)
+                            {
+                                foreach (var itm in catLst)
+                                {
+                                    <li class="dropdown">
+                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">@itm.Name_En</a>
+                                        <ul class="dropdown-menu">
+                                            @{
+                                                List<BookEntity> bookLst = bookBal.GetList(itm.Id);
+                                                if (bookLst != null)
+                                                {
+                                                    foreach (var bookItm in bookLst)
+                                                    {
+                                                        <li><a href="@Href("~/Pages/Books?bookId="+bookItm.Id+"&departId="+departId+"")">@bookItm.Name_En</a></li>
+                                                    }
+                                                }
+                                            }
+
+                                        </ul>
+                                    </li>
+                                                        }
+                                                    }
+
+
+
+                                                }
+
+
+
+                    </ul>
+                </form>
+
+                <ul class="nav navbar-nav navbar-right">
+
+                    @if (WebSecurity.IsAuthenticated)
+                    {
+                        <li class="dropdown">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                <span class="glyphicon glyphicon-user" style="margin-left:10px;margin-right:10px;"></span>@WebSecurity.CurrentUserName
+                                <span class="caret"></span>
+                            </a>
+
+                            <ul class="dropdown-menu">
+                                <li><a href="@Href(@"~/Account/ChangePassword.cshtml")">Change Password</a></li>
+                                <li><a href="@Href(@"~/Account/ProfilePicture.cshtml")">Change Profile Pictur</a></li>
+
+                                @if (WebSecurity.HasUserId && (Roles.IsUserInRole(App.ControlRol) || Roles.IsUserInRole(App.AdminRol)))
+                                {
+                                    <li><a href="@Href(@"~/Admin/Home")">Admin Home</a></li>
+                                    <li><a href="@Href(@"~/Admin/Users/CreateUser")">Add New User</a></li>
+                                    <li><a href="@Href(@"~/Admin/Users/UpdateUser")">Update User</a></li>
+                                        <li><a href="@Href(@"~/Admin/Users/AddUsersToRoles")">Add Users To Roles</a></li>
+
+                                }
+
+                            </ul>
+                        </li>
+
+                        <li><a href="@Href("~/Account/Logout?returnUrl =" + Server.UrlEncode(Request.ServerVariables["script_name"]))"><span class="glyphicon glyphicon-log-out"></span> Login Out</a></li>
+
+                    }
+                    else
+                    {
+                        <li><a href="@Href("~/Account/Login")"><span class="glyphicon glyphicon-log-in"></span> Login In</a></li>
+                        //<li><a href="@Href("~/Account/Register")"><span class="glyphicon glyphicon-registration-mark"></span>Register</a></li>
+                    }
+
+
+                </ul>
+
+            </div>
+            <!--/.navbar-collapse -->
+        </div>
+        <div class="clearfix">
+
+        </div>
+    </div>
+    <div class="container-fluid">
+      @RenderBody()
+    </div>
+    <!--/.fluid-container-->
+    
+   
+   
+    @RenderSection("endPageScript", required: false)
+</body>
+</html>

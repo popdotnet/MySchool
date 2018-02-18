@@ -1,0 +1,56 @@
+﻿@using System.Text.RegularExpressions;
+@using MyExtension;
+
+
+
+@functions{
+    public static bool IsValidEmail(string s)
+    {
+        string pattern = @"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
+        return Regex.IsMatch(s, pattern);
+    }
+
+   
+
+
+    public static string SetLoginCoockie(bool setCoockie)
+    {
+
+        int minuts = 600;
+        string value = "pop";
+
+        if (setCoockie)
+        {
+            //--------Set Coockie
+            Response.Cookies["loginTimeOut"].Value = value;
+            Response.Cookies["loginTimeOut"].Expires = DateTime.Now.AddMinutes(minuts);
+        }
+        else
+        {
+            var c = Request.Cookies["loginTimeOut"]; //-----to activate coockie
+
+            //--------Check Coockie Expires
+            if (Request.Cookies["loginTimeOut"] == null || Request.Cookies["loginTimeOut"].Value == "")
+            {
+                WebSecurity.Logout();
+            }
+            else
+            {
+
+                Response.Cookies["loginTimeOut"].Value = value;
+                Response.Cookies["loginTimeOut"].Expires = DateTime.Now.AddMinutes(minuts);
+            }
+
+        }
+
+
+        return "";
+    }
+
+
+    
+
+   
+
+   
+}

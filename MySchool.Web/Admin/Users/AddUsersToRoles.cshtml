@@ -1,0 +1,205 @@
+﻿@{
+
+    UserBal userBal = new UserBal();
+    UserRolesBal userRolesBal = new UserRolesBal();
+
+    List<UserEntity> userLst = userBal.GetList(WebSecurity.CurrentUserName);
+
+    var userRolesLst = new List<UserRolesEntity>();
+
+    var message = "";
+
+    var roles = Roles.GetAllRoles().Where(u => u != "ControlRol");
+
+
+    if (IsPost)
+    {
+        var userName = Request["userName"];
+        var role = Request["role"];
+        if (!userName.IsEmpty() && !role.IsEmpty())
+        {
+            if (!Roles.IsUserInRole(userName, role))
+            {
+                if (Roles.RoleExists(role))
+                {
+                    Roles.AddUsersToRoles(new[] { userName }, new[] { role });
+                    message = userName + " added to the " + role + " Role";
+                }
+                else
+                {
+                    message = role + " no longer exists!";
+                }
+            }
+            else
+            {
+                message = userName + " is already in the " + role + " Role";
+            }
+        }
+
+
+        if (!Request["roleId"].IsEmpty())
+        {
+            int userId = WebSecurity.GetUserId(userName.ToString());
+
+            string[] values = Request["roleId"].ToString().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            if (values != null)
+            {
+                List<int> numValues = new List<int>();
+
+                foreach (string s in values)
+                {
+                    numValues.Add(s.AsInt());
+                }
+
+                userRolesBal.Delete(userId, numValues);
+
+            }
+
+
+
+        }
+
+
+
+
+    }
+
+    if (Request["userName"].IsEmpty() == false)
+    {
+        userRolesLst = userRolesBal.GetUserRolesQryList(Request["userName"].ToString());
+    }
+
+
+}
+
+
+<div class="col-md-12">
+
+    <form class="form-horizontal">
+        <fieldset>
+
+            <legend>Select User</legend>
+
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="userName">Select User:</label>
+                </div>
+                <div class="col-md-10">
+                    <select name="userName" onchange="this.form.submit()">
+                        <option value="">--Choose user--</option>
+                        @foreach (var user in userLst)
+                        {
+                        <option value="@user.UserName" @Helpers.Selected("userName", user.UserName)>@user.UserName</option>
+                        }
+                    </select>
+                    <span>@message</span>
+                </div>
+
+            </div>
+
+        </fieldset>
+    </form>
+
+
+</div>
+
+<div class="col-md-12">
+
+    <form method="post" class="form-horizontal">
+
+        <fieldset>
+
+            <legend>Add User To Role</legend>
+
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="role">Select Role:</label>
+                </div>
+                <div class="col-md-10">
+                    <select name="role">
+                        <option value="">--Choose role--</option>
+                        @foreach (var role in roles)
+                        {
+                        <option>@role</option>
+                        }
+                    </select>
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <input type="submit" value="Add" class="btn btn-default pull-right" />
+                </div>
+
+            </div>
+        </fieldset>
+    </form>
+
+</div>
+
+
+
+@if (userRolesLst != null)
+{
+    <div class="col-md-12">
+        <br />
+        <form method="post" class="form-horizontal">
+            <div class="form-group">
+                <div class="col-md-12">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>User Roles</th>
+                                <th>*</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            @foreach (var usrRol in userRolesLst)
+                            {
+                                <tr>
+                                    <td>
+                                        @usrRol.UserData.UserName
+                                    </td>
+                                    <td>
+                                        @usrRol.RoleData.RoleName
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="roleId" value="@usrRol.RoleData.RoleId" />
+                                    </td>
+                                </tr>
+
+
+                            }
+
+
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+                <div class="col-md-12">
+                    <input type="submit" value="Delete" class="btn btn-default pull-right" />
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+}
+
+
+
+
+
+
+
+

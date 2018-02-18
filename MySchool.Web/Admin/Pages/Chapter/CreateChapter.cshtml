@@ -1,0 +1,318 @@
+﻿@{
+
+    Page.Title = "Create Chapter";
+
+    var departmentId = Request["departmentId"];
+    var catId = Request["catId"];
+    var bookId = Request["bookId"];
+    var partId = Request["partId"];
+    var edit = Request.Unvalidated("edit");
+
+    //----Department List
+    DepartmentBal departBal = new DepartmentBal();
+    var departLst = departBal.GetList();
+    if (departLst != null)
+    {
+        departLst = departLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Category List
+    CatBal catBal = new CatBal();
+    var catLst = catBal.GetList(departmentId.AsInt());
+    if (catLst != null)
+    {
+        catLst = catLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Book List
+    BookBal bookBal = new BookBal();
+    var bookLst = bookBal.GetList(catId.AsInt());
+    if (bookLst != null)
+    {
+        bookLst = bookLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----BookPart List
+    BookPartBal partBal = new BookPartBal();
+    var partLst = partBal.GetList(bookId.AsInt());
+    if (partLst != null)
+    {
+
+        partLst = partLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Chapter
+    ChapterBal chapterBal = new ChapterBal();
+    var chapterLst = chapterBal.GetList();
+
+    if (chapterLst != null)
+    {
+        chapterLst = chapterLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    //----Is Post
+    if (IsPost)
+    {
+        if (Request["chapterName"].IsEmpty())
+        {
+            ModelState.AddError("chapterName", "Required");
+        }
+
+        if (partId.IsEmpty())
+        {
+            ModelState.AddError("partId", "Required");
+        }
+
+        if (edit == null || edit.ToString() == "")
+        {
+            ModelState.AddError("edit", "Required");
+        }
+
+
+        if (ModelState.IsValid)
+        {
+            //------
+
+            ChapterEntity data = new ChapterEntity();
+            data.Name_Ar = Request["chapterName"].ToString();
+            data.Name_En = Request["chapterName"].ToString();
+
+            if (!partId.IsEmpty())
+            {
+                data.BookPartData.Id = partId.AsInt();
+            }
+
+            if (edit != null)
+            {
+                data.Cont = Request.Unvalidated("edit").ToString();
+
+            }
+            data.MadeById = WebSecurity.CurrentUserId;
+            data.RowId = Guid.NewGuid().ToString();
+            chapterBal.Add(data);
+            Response.Redirect(Request.RawUrl);
+
+        }
+
+    }
+
+}
+
+@section head{
+
+
+    <script src="~/Content/ckeditor/ckeditor.js"></script>
+    <script src="~/Content/ckfinder/ckfinder.js"></script>
+
+
+
+
+}
+
+<div class="row">
+    <form class="form-horizontal">
+        <fieldset>
+            <legend>Select Chapter</legend>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Department</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="departmentId" class="form-control" onchange="this.form.submit()">
+                        <option value="">None</option>
+                        @if (departLst != null)
+                        {
+                            foreach (var itm in departLst)
+                            {
+                                <option value="@itm.Id" @( departmentId != null && departmentId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("catId")
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Category</label>
+                </div>
+
+                <div class="col-md-6">
+                    <select name="catId" class="form-control" onchange="this.form.submit()">
+                        <option value="">None</option>
+                        @if (catLst != null)
+                        {
+                            foreach (var itm in catLst)
+                            {
+                                <option value="@itm.Id" @( catId != null && catId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("catId")
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Book</label>
+                </div>
+
+                <div class="col-md-6">
+                    <select name="bookId" class="form-control" onchange="this.form.submit()">
+                        <option value="">None</option>
+                        @if (bookLst != null)
+                        {
+                            foreach (var itm in bookLst)
+                            {
+                                <option value="@itm.Id" @( bookId != null && bookId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("bookId")
+                </div>
+            </div>
+
+        </fieldset>
+    </form>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <form method="post" class="form-horizontal" enctype="multipart/form-data">
+            <fieldset>
+                <legend>Create Chapter</legend>
+
+                <div class="form-group">
+                    <div class="col-md-2 text-left">
+                        <label class="control-label" style="float:left;">Chapter Name:</label>
+                    </div>
+
+                    <div class="col-md-6">
+                        <input type="text" id="chapterName" name="chapterName" class="form-control" maxlength="100" placeholder="Enter Chapter Name" value="@Request["chapterName"]" />
+                    </div>
+                    <div class="col-md-4">
+                        @Html.ValidationMessage("chapterName")
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label for="directManger">Part</label>
+                    </div>
+                    <div class="col-md-6">
+                        <select name="partId" class="form-control">
+                            <option value="">None</option>
+                            @if (partLst != null)
+                            {
+                                foreach (var itm in partLst)
+                                {
+                                    <option value="@itm.Id" @( partId != null && partId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                            }
+                        </select>
+
+                    </div>
+                    <div class="col-md-4">
+                        @Html.ValidationMessage("partId")
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-2">
+                        <label for="directManger">Content</label>
+                    </div>
+                    <div class="col-md-9">
+                        <textarea id="edit" name="edit">
+                            @if (edit != null)
+                            {
+                                @*@Html.Raw(Request.Unvalidated("edit").ToString())*@
+                                @Html.Raw(edit.ToString())
+                            }
+
+                        </textarea>
+
+
+                    </div>
+                    <div class="col-md-1">
+                        @Html.ValidationMessage("edit")
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <button type="submit" class="btn btn-default" style="float:right;">Add</button>
+                    </div>
+                    <div class="col-md-1">
+
+                    </div>
+
+                </div>
+
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h3 style="border-bottom:2px solid #ddd; color:#ff6a00">Chapter List</h3>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Chapter Id</th>
+                    <th>Chapter Name</th>
+                    <th>Part Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (chapterLst != null)
+                {
+                    chapterLst.ForEach(u => u.BookPartData.GetData());
+
+                    var chLst = (from u in chapterLst where u.BookPartData.BookData.Id == bookId.AsInt() orderby u.BookPartData.Id, u.Name_En select u).ToList();
+                    if (chLst != null)
+                    {
+                        foreach (var itm in chLst)
+                        {
+                            itm.BookPartData.GetData();
+                            <tr>
+                                <td>@itm.Id</td>
+                                <td>@itm.Name_En</td>
+                                <td>@itm.BookPartData.Name_En</td>
+                            </tr>
+                        }
+                    }
+
+                }
+            </tbody>
+        </table>
+
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    CKEDITOR.replace("edit", { customConfig: "/Content/ckeditor/config.js" });
+
+    CKFinder.setupCKEditor(edit);
+
+
+    $(function () {
+
+        $('#Brows').click(function () {
+            alert("pop");
+            var ckfinder = new CKFinder();
+            ckfinder.selectActionFunction = function (Images) {
+                $('#hinhanh').val(Images);
+
+            };
+            ckfinder.popup();
+        });
+    })
+
+</script>

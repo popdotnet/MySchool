@@ -1,0 +1,13 @@
+﻿@using WebMatrix.WebData;
+
+@{
+    SqlDbHelper.CONNECTION_STRING = System.Configuration.ConfigurationManager.ConnectionStrings["ConStr1"].ConnectionString;
+
+    WebSecurity.InitializeDatabaseConnection("ConStr1", "Users", "UserId", "UserName", true);
+
+
+    App.ControlRol = "ControlRol";
+    App.AdminRol = "AdminRol";
+    App.PowerUserRol = "PowerUserRol";
+
+}

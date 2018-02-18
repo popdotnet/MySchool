@@ -1,0 +1,100 @@
+﻿@{
+
+    Page.Title = "Create Department";
+
+    DepartmentBal departmentBal = new DepartmentBal();
+
+    var departmentLst = departmentBal.GetList();
+
+    if(departmentLst !=null )
+    {
+        departmentLst = departmentLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+
+    if (IsPost)
+    {
+        if (Request["department"].IsEmpty())
+        {
+            ModelState.AddError("department", "Required");
+        }
+
+        if (ModelState.IsValid)
+        {
+            //------
+
+            DepartmentEntity data = new DepartmentEntity();
+            data.Name_Ar = Request["department"].ToString();
+            data.Name_En = Request["department"].ToString();
+           
+            data.MadeById = WebSecurity.CurrentUserId;
+            data.RowId = Guid.NewGuid().ToString();
+            departmentBal.Add(data);
+            Response.Redirect(Request.RawUrl);
+
+        }
+
+    }
+
+}
+
+<div class="col-md-12">
+    <form method="post" class="form-horizontal">
+        <fieldset>
+            <legend>Create Department</legend>
+
+            <div class="form-group">
+                <div class="col-md-2 text-left">
+                    <label class="control-label" style="float:left;">Department Name:</label>
+                </div>
+
+                <div class="col-md-6">
+                    <input type="text" id="department" name="department" class="form-control" maxlength="100" placeholder="Enter department Name" value="@Request["department"]" />
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("department")
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-default" style="float:right;">Add</button>
+                </div>
+                <div class="col-md-4">
+
+                </div>
+
+            </div>
+
+        </fieldset>
+    </form>
+</div>
+
+
+<div class="col-md-12">
+    <h3 style="border-bottom:2px solid #ddd; color:#ff6a00">Department List</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Department Id</th>
+                <th>Department Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (departmentLst != null)
+            {
+                foreach (var itm in departmentLst)
+                {
+                    <tr>
+                        <td>@itm.Id</td>
+                        <td>@itm.Name_En</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+
+</div>

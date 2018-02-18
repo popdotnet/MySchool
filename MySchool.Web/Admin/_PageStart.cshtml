@@ -1,0 +1,11 @@
+﻿@{
+    Layout = "~/Shared/_LayoutAdmin.cshtml";
+
+    WebSecurity.RequireAuthenticatedUser();
+
+    if (!Roles.IsUserInRole(App.ControlRol) && !Roles.IsUserInRole(App.AdminRol))
+    {
+        Response.Redirect("~/");
+    }
+
+}

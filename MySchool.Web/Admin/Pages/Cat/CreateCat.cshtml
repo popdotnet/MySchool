@@ -1,0 +1,143 @@
+﻿@{
+
+    Page.Title = "Create Category";
+
+
+    var departmentId = Request["departmentId"];
+
+    DepartmentBal departmentBal = new DepartmentBal();
+    var departmentLst = departmentBal.GetList();
+    if (departmentLst != null)
+    {
+
+        departmentLst = departmentLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    CatBal personBal = new CatBal();
+    var catLst = personBal.GetList();
+
+    if (catLst !=null )
+    {
+        catLst = catLst.OrderBy(u => u.Name_En).ToList();
+    }
+
+    if (IsPost)
+    {
+        if (Request["Cat"].IsEmpty())
+        {
+            ModelState.AddError("Cat", "Required");
+        }
+
+        if (departmentId.IsEmpty())
+        {
+            ModelState.AddError("departmentId", "Required");
+        }
+
+
+        if (ModelState.IsValid)
+        {
+            //------
+
+            CatEntity data = new CatEntity();
+            data.Name_Ar = Request["Cat"].ToString();
+            data.Name_En = Request["Cat"].ToString();
+            if (!departmentId.IsEmpty())
+            {
+                data.DepartmentData.Id = departmentId.AsInt();
+            }
+
+            data.MadeById = WebSecurity.CurrentUserId;
+            data.RowId = Guid.NewGuid().ToString();
+            personBal.Add(data);
+            Response.Redirect(Request.RawUrl);
+
+        }
+
+    }
+
+}
+
+<div class="col-md-12">
+    <form method="post" class="form-horizontal">
+        <fieldset>
+            <legend>Create Category</legend>
+
+            <div class="form-group">
+                <div class="col-md-2 text-left">
+                    <label class="control-label" style="float:left;">Category Name:</label>
+                </div>
+
+                <div class="col-md-6">
+                    <input type="text" id="Cat" name="Cat" class="form-control" maxlength="100" placeholder="Enter Category Name" value="@Request["Cat"]" />
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("Cat")
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-md-2">
+                    <label for="directManger">Department</label>
+                </div>
+                <div class="col-md-6">
+                    <select name="departmentId" class="form-control">
+                        <option value="">None</option>
+                        @if (departmentLst != null)
+                        {
+                            foreach (var itm in departmentLst)
+                            {
+                                <option value="@itm.Id" @( departmentId != null && departmentId == itm.Id.ToString() ? "selected=\"selected\"" : "")>@itm.Name_En</option>   }
+                        }
+                    </select>
+
+                </div>
+                <div class="col-md-4">
+                    @Html.ValidationMessage("departmentId")
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-default" style="float:right;">Add</button>
+                </div>
+                <div class="col-md-4">
+
+                </div>
+
+            </div>
+
+        </fieldset>
+    </form>
+</div>
+
+
+<div class="col-md-12">
+    <h3 style="border-bottom:2px solid #ddd; color:#ff6a00">Category List</h3>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Category Id</th>
+                <th>Category Name</th>
+                <th>Department Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (catLst != null)
+            {
+                foreach (var itm in catLst)
+                {
+                    itm.DepartmentData.GetData(); 
+                    <tr>
+                        <td>@itm.Id</td>
+                        <td>@itm.Name_En</td>
+                        <td>@itm.DepartmentData.Name_En</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+
+</div>

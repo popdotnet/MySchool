@@ -1,0 +1,118 @@
+﻿@{
+    Page.Title = "Title goes here";
+    //Layout = "Your Layout Page goes here";
+    WebSecurity.RequireAuthenticatedUser();
+
+}
+
+
+
+@{
+
+    UserBal userBal = new UserBal();
+
+    WebImage photo = null;
+
+    var imagePath = userBal.GetUserProfileUrl(WebSecurity.CurrentUserId);
+    var fullPath = Server.MapPath("~" + imagePath);
+
+    if (File.Exists(fullPath))
+    {
+
+
+    }
+    else
+    {
+        imagePath = "http://placehold.it/150x150";
+    }
+
+
+    if (IsPost)
+    {
+        photo = WebImage.GetImageFromRequest();
+
+        if (photo != null)
+        {
+            int h = photo.Height;
+            int w = photo.Width;
+
+            int cutH = 0;
+            int cutW = 0;
+
+            cutH = (h - w > 0 ? h - w : 0);
+            cutW = (w - h > 0 ? w - h : 0);
+
+            try
+            {
+                photo.Crop(top: cutH / 2, bottom: cutH / 2, right: cutW / 2, left: cutW / 2);
+            }
+            catch (NullReferenceException)
+            {
+
+            }
+
+
+
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+
+            }
+
+
+            string extension = Path.GetExtension(photo.FileName);
+            var fileName = Path.GetFileName(photo.FileName);
+            string UniqName = Guid.NewGuid().ToString() + extension;
+
+            imagePath = @"\images\Prof\" + WebSecurity.CurrentUserId.ToString() + extension;
+            fullPath = Server.MapPath("~" + imagePath);
+
+            photo.Save(@"~\" + imagePath);
+            userBal.UpdateUserProfileUrl(WebSecurity.CurrentUserId, imagePath);
+
+        }
+    }
+
+}
+
+
+
+<script>
+    function fileCheck() {
+        document.getElementById("imgfrm").submit();
+    };
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+
+
+        <form id="imgfrm" action="" method="post" enctype="multipart/form-data">
+            <fieldset>
+                <legend> Upload Image </legend>
+                <table style="width:100%">
+                    <tr>
+                        <td style="height:50px; vertical-align:top;">
+                            <input type="file" name="Image" id="Image" onchange="fileCheck(this);" accept=".jpg,.png,.jpeg,.gif" />
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="width:152px;height:152px;float:left; background-color:aliceblue;border:1px solid gray;overflow:hidden;">
+                                <img src="@imagePath" alt="image" width="150" height="150" style="width:150px;height:150px;" />
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+
+            </fieldset>
+        </form>
+
+
+    </div>
+
+</div>
+
+

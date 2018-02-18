@@ -1,0 +1,119 @@
+﻿@{
+    var message = "";
+    var db = Database.Open("ConStr1");
+    var sql = "SELECT UserName FROM Users";
+    var users = db.Query(sql);
+    var roles = Roles.GetAllRoles();
+
+    if (IsPost)
+    {
+        var user = Request["user"];
+        var role = Request["role"];
+        if (!user.IsEmpty() && !role.IsEmpty())
+        {
+            if (!Roles.IsUserInRole(user, role))
+            {
+                if (Roles.RoleExists(role))
+                {
+                    Roles.AddUsersToRoles(new[] { user }, new[] { role });
+                    message = user + " added to the " + role + " Role";
+                }
+                else
+                {
+                    message = role + " no longer exists!";
+                }
+            }
+            else
+            {
+                message = user + " is already in the " + role + " Role";
+            }
+        }
+
+        
+
+    }
+
+}
+
+<div class="col-md-12">
+
+    <form method="post">
+        <div>@message</div>
+        <fieldset>
+            <legend>Add User To Role</legend>
+            <div>
+                <label for="user">Select User:</label>
+                <select name="user" onchange="this.form.submit()">
+                    <option value="">--Choose user--</option>
+                    @foreach (var user in users)
+                    {
+                        <option value="@user.UserName" @Helpers.Selected("user", user.UserName)>@user.UserName</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="role">Select Role:</label>
+                <select name="role">
+                    <option value="">--Choose role--</option>
+                    @foreach (var role in roles)
+                    {
+                        <option>@role</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <input type="submit" value="Add" />
+            </div>
+        </fieldset>
+    </form>
+
+</div>
+
+@{
+
+    if (Request["user"].IsEmpty() == false)
+    {
+        sql = " SELECT     webpages_UsersInRoles.UserId, Users.UserName, webpages_UsersInRoles.RoleId, webpages_Roles.RoleName ";
+        sql += " FROM       webpages_Roles RIGHT OUTER JOIN ";
+        sql += " webpages_UsersInRoles ON webpages_Roles.RoleId = webpages_UsersInRoles.RoleId LEFT OUTER JOIN ";
+        sql += " Users ON webpages_UsersInRoles.UserId = Users.UserId ";
+        sql += " WHERE Users.UserName = '" + Request["user"].ToString() + "' ";
+
+        var userRoles = db.Query(sql);
+
+        <div class="col-md-12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>User Roles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usrRol in userRoles)
+                    {
+                        <tr>
+                            <td>
+                                @usrRol.UserName
+                            </td>
+                            <td>
+                                @usrRol.RoleName
+                            </td>
+                        </tr>
+
+
+                    }
+
+                </tbody>
+
+            </table>
+        </div>
+
+    }
+
+
+
+}
+
+
+

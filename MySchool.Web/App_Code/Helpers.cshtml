@@ -1,0 +1,117 @@
+﻿
+@helper Selected(string option, string value)
+{
+if (HttpContext.Current.Request[option] != null)
+{
+    var values = HttpContext.Current.Request[option].Split(',');
+    if (values.Contains(value))
+    {
+            <text>selected=\"selected\"</text>
+    }
+}
+}
+
+@helper SelectedByVal(string option, string value)
+{
+if (option != null)
+{
+    if (option == value)
+    {
+            <text>selected="selected"</text>
+    }
+}
+
+}
+
+
+
+@helper Checked(string option, string value)
+{
+if (HttpContext.Current.Request[option] != null)
+{
+    var values = HttpContext.Current.Request[option].Split(',');
+    if (values.Contains(value))
+    {
+            <text>checked=\"checked\"</text>
+    }
+}
+}
+
+@helper CheckedByVal(string option, string value)
+{
+if (option == value)
+{
+        <text>checked=\"checked\"</text>
+}
+}
+
+
+
+@helper DateTimePicker_ImportFileResource(bool checkDateDataType)
+{
+
+    if (checkDateDataType)
+    {
+        <script>
+            var datefield = document.createElement("input")
+            datefield.setAttribute("type", "date")
+            if (datefield.type != "date") {
+                document.write('<script src=@Href("~/Scripts/jquery.datetimepicker.full.min.js") ><\/script>');
+                document.write('<link href=@Href("~/Content/jquery.datetimepicker.min.css") rel="stylesheet" />');
+            }
+
+        </script>
+    }
+    else
+    {
+        <script>
+            document.write('<script src=@Href("~/Scripts/jquery.datetimepicker.full.min.js") ><\/script>');
+            document.write('<link href=@Href("~/Content/jquery.datetimepicker.min.css") rel="stylesheet" />');
+        </script>
+    }
+
+
+}
+
+
+@helper DateTimePicker_AddScriptFunc(string dateInputId, bool checkDateDataType)
+{
+
+    if (checkDateDataType)
+    {
+        <script>
+            if (datefield.type != "date") { //if browser doesn't support input type="date", initialize date picker widget:
+                $("#@dateInputId").datetimepicker({
+                    timepicker: false,
+                    timepickerScrollbar: false,
+                    format: 'd/m/Y',
+                    formatDate: 'd/m/y',
+                    autoclose: true,
+                    todayhighlight: true
+
+                });
+            }
+        </script>
+    }
+    else
+    {
+        <script>
+
+            $("#@dateInputId").datetimepicker({
+                timepicker: false,
+                timepickerScrollbar: false,
+                format: 'd/m/Y',
+                formatDate: 'd/m/y',
+                autoclose: true,
+                todayhighlight: true
+
+            });
+
+        </script>
+    }
+
+
+
+}
+
+

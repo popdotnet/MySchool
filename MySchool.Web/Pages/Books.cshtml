@@ -1,0 +1,390 @@
+﻿@{
+    var departId = Request["departId"];
+    if (departId == null)
+    {
+        departId = "0";
+    }
+
+
+    var bookId = Request["bookId"];
+
+    var chId = Request["chId"];
+
+
+    BookBal bookBal = new BookBal();
+    BookEntity bookData = null;
+
+    BookPartBal bookPartBal = new BookPartBal();
+    List<BookPartEntity> bookPartLst = null;
+
+    ChapterBal chapterBal = new ChapterBal();
+
+
+    if (bookId != null)
+    {
+        bookData = bookBal.GetData(bookId.AsInt());
+        if (bookData != null)
+        {
+            Page.Title = bookData.Name_En;
+            bookPartLst = bookPartBal.GetList(bookId.AsInt());
+        }
+
+    }
+
+
+    Layout = Href("~/Shared/_Layout.cshtml");
+}
+
+@section head{
+    <script src="~/Scripts/asset/myLayBlugin.js"></script>
+    <style>
+        .contWrapper {
+            padding-left: 0px;
+        }
+
+        .chapter img {
+            max-width:100%;
+        }
+        .chapter .title {
+            color: #ff0000;
+            text-align: center;
+        }
+
+        .sidebar-nav-fixed {
+            background-color: #f1f1f1;
+        }
+
+        .sidebar-nav-fixed h4 {
+            padding-left:5px;
+        }
+
+            .sidebar-nav-fixed ul {
+                list-style: none;
+                padding-left: 0px;
+            }
+
+                .sidebar-nav-fixed ul li {
+                    width:100%;
+                    padding-left:5px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    
+                }
+                .sidebar-nav-fixed ul  li:hover {
+                    
+                    background-color:rgba(0,0,0,0.3);
+                }
+                .sidebar-nav-fixed ul a {
+                    width:100%;
+                    text-decoration:none;
+            }
+            /*--------Styling scrollbar----------------*/
+            .sidebar-nav-fixed::-webkit-scrollbar {
+                /*addresses the background of the bar itself. It is usually covered by the other elements*/
+                width: 0.3em;
+            }
+
+            .sidebar-nav-fixed::-webkit-scrollbar-button {
+                /*addresses the directional buttons on the scrollbar*/
+                background-color: brown;
+                height: 3px;
+            }
+
+            .sidebar-nav-fixed::-webkit-scrollbar-track {
+                /*addresses the empty space “below” the progress bar*/
+                -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+            }
+
+            .sidebar-nav-fixed::-webkit-scrollbar-track-piece {
+                /*is the top-most layer of the the progress bar not covered by the draggable scrolling element (thumb)*/
+            }
+
+            .sidebar-nav-fixed::-webkit-scrollbar-thumb {
+                /*addresses the draggable scrolling element that resizes depending on the size of the scrollable element*/
+                background-color: darkgrey;
+                outline: 1px solid slategrey;
+            }
+
+            .sidebar-nav-fixed::-webkit-scrollbar-corner {
+                /*addresses the (usually) bottom corner of the scrollable element, where two scrollbars might meet*/
+            }
+
+            .sidebar-nav-fixed::-webkit-resizer {
+                /*addresses the draggable resizing handle that appears above the scrollbar-corner at the bottom corner of some elements*/
+            }
+        /*--------End Styling scrollbar----------------*/
+
+        .lesson {
+            width: 100%;
+        }
+
+            .lesson .section {
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+
+                .lesson .section h2:first-child {
+                    color: blue;
+                    text-align: left;
+                }
+
+                .lesson .section iframe {
+                    display: block;
+                    margin: 0 auto;
+                    width: 800px;
+                    height: 450px;
+                    padding-top: 15px;
+                    padding-bottom: 15px;
+                }
+
+        .section {
+            width: 100%;
+        }
+
+
+        .selectedLeson {
+            background-color: #4CAF50;
+        }
+        .selectedLeson a {
+            color: white;
+        }
+
+        @@media (min-width: 992px) {
+            .sidebar-nav-fixed {
+                position: fixed;
+                height: 90%;
+                width: 15%;
+                overflow: auto;
+                /*float: left;*/
+                /*margin-bottom:100px;*/
+                /*padding-bottom:100px;*/
+            }
+
+            .sidebar-nav-sticky {
+                /*position: sticky;*/
+                position: relative;
+                top: 50px;
+                overflow:auto;
+            }
+
+          
+        }
+    </style>
+}
+
+
+
+<div id="contWrapper" class="container-fluid contWrapper">
+    <div class="row chapter">
+        <div id="sidebar-nav-sticky" class="col-md-2 sidebar-nav-sticky">
+            <div id="sidebar-nav-fixed" class="sidebar-nav-fixed">
+                @if (bookPartLst != null)
+                {
+                    foreach (var itm in bookPartLst)
+                    {
+                        <h4>@itm.Name_En</h4>
+
+                        List<ChapterEntity> chapterLst = chapterBal.GetList(itm.Id);
+
+                        if (chapterLst != null)
+                        {
+                            <ul>
+                                @foreach (var ch in chapterLst)
+                                {
+                                    <li @(chId != null && chId.AsInt() == ch.Id ? "class=selectedLeson" : "")><a href="@Href("~/Pages/Books?bookId="+itm.BookData.Id+"&departId="+departId+"&chId="+ch.Id+"")">@ch.Name_En</a></li>
+                                }
+
+                            </ul>
+                        }
+
+
+
+                    }
+                }
+            </div>
+            <!--/sidebar-nav-fixed -->
+
+        </div>
+        <div id="chContent" class="col-md-10 chContent">
+
+            <div style="visibility:hidden;">
+                <input id="txtTop" name="txtTop" type="text" />
+                <button id="btnSetTop">Set Side Top</button>
+                <button id="btnGetData">Get Data</button>
+            </div>
+            
+
+            @if (chId != null)
+            {
+                var chCont = chapterBal.GetData(chId.AsInt());
+
+                if (chCont != null)
+                {
+                    <h1 class="title">@chCont.Name_En</h1>
+                    @Html.Raw(chCont.Cont)
+                }
+
+            }
+
+        </div>
+    </div>
+
+</div>
+
+
+@section endPageScript{
+    <script type="text/javascript">
+        //var $container = $("html,body,.sidebar-nav-fixed");
+        var $container = $(".sidebar-nav-fixed");
+        var $scrollTo = $('.selectedLeson');
+
+
+        $(document).ready(function () {
+            $container.animate({ scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop() - 100, scrollLeft: 0 }, 300);
+        });
+
+
+    </script>
+    <script type="text/javascript">
+        
+
+        $('document').ready(function () {
+            resetSideBarHeight();
+
+        });
+
+
+        function getElmVisibleHeight(elmId) {
+            var $el = $('#'+elmId),
+                scrollTop = $(this).scrollTop(),
+                scrollBot = scrollTop + $(this).height(),
+                elTop = $el.offset().top,
+                elBottom = elTop + $el.outerHeight(),
+                visibleTop = elTop < scrollTop ? scrollTop : elTop,
+                visibleBottom = elBottom > scrollBot ? scrollBot : elBottom;
+            return visibleBottom - visibleTop;
+        }
+
+        
+        function resetSideBarHeight() {
+            var contWrapper = document.getElementById("contWrapper");
+            var side = document.getElementById("sidebar-nav-fixed");
+            var cont = document.getElementById("chContent");
+            var nav = document.getElementById("myNavbar");
+            var footer = document.getElementById("footer");
+            var header = document.getElementById("header");
+
+            var windoHeight = myLayout.getWindowsInnerHeight();
+            var docHeight = myLayout.getDoc_clientHeight();
+            var bodyHeight = myLayout.getBody_clientHeight();
+            var conHeight = myLayout.getElm_offsetHeight(contWrapper);
+            var navHeight = myLayout.getElm_offsetHeight(nav);
+            var sideHeight = myLayout.getElm_offsetHeight(side);
+            var footerHeight = myLayout.getElm_offsetHeight(footer);
+
+            if (conHeight < sideHeight) {
+                //myLayout.setElm_Height(cont, sideHeight);
+            }
+
+            var isheaderInView = myLayout.isElementInViewport(header, false);
+            var isfooterInView = myLayout.isElementInViewport(footer, false);
+
+            var sideComputedHeight = 0;
+            var footerTop = 0;
+
+            var headerBottom = 0;
+            headerBottom = myLayout.getElm_Bottom(header);
+
+            if (headerBottom < 0) {
+                headerBottom = 0;
+            }
+
+            if (isfooterInView) {
+                footerTop = myLayout.getElm_Top(footer);
+
+
+                //------------Set sideComputedHeight
+                sideComputedHeight = (windoHeight - (windoHeight - footerTop + navHeight));
+
+            } else {
+                //------------Set sideComputedHeight
+                sideComputedHeight = (windoHeight - navHeight);
+
+            }
+
+            var SideMarginTopBottom = 1;
+
+            sideComputedHeight = sideComputedHeight - headerBottom - SideMarginTopBottom;
+
+
+            //------------Set SideBar Height
+            var sidHeightPercent = (100 / 100);
+            myLayout.setElm_Height(side, sideComputedHeight * sidHeightPercent);
+
+            //------------Set SideBar Top
+            myLayout.setElm_Top(side, navHeight + headerBottom + (SideMarginTopBottom / 2) + ((sideComputedHeight * (1 - sidHeightPercent)) / 2));
+
+        }
+        function contClick() {
+            var contWrapper = document.getElementById("contWrapper");
+            var side = document.getElementById("sidebar-nav-fixed");
+            var cont = document.getElementById("chContent");
+            var nav = document.getElementById("myNavbar");
+            var footer = document.getElementById("footer");
+            var header = document.getElementById("header");
+
+            var x = "";
+
+            x += "\n windoHeight : " + myLayout.getWindowsInnerHeight();
+            x += "\n docHeight : " + myLayout.getDoc_clientHeight();
+            x += "\n offsetHeight : " + myLayout.getDoc_offsetHeight();
+            x += "\n BodyHeight : " + myLayout.getBody_clientHeight();
+   
+            x += "\n-------Header--------";
+            x += "\n header Top : " + myLayout.getElm_Top(header) +" | offsetTop : " + myLayout.getElm_offsetTop(header);
+            x += "\n header bottom : " + myLayout.getElm_Bottom(header);
+            x += "\n header height : " + myLayout.getElm_offsetHeight(header);
+
+            x += "\n-------NavBar--------";
+            x += "\n Nav Top : " + myLayout.getElm_Top(nav) + " | offsetTop : " + myLayout.getElm_offsetTop(nav);
+            x += "\n Nav bottom : " + myLayout.getElm_Bottom(nav);
+            x += "\n Nav height : " + myLayout.getElm_offsetHeight(nav);
+
+            x += "\n-------footer--------";
+            x += "\n footer Top : " + myLayout.getElm_Top(footer) + " | offsetTop : " + myLayout.getElm_offsetTop(footer);
+            x += "\n footer Bottom : " + myLayout.getElm_Bottom(footer);
+            
+            x += "\n-------side--------";
+            x += "\n Side Top : " + myLayout.getElm_Top(side) + " | offsetTop : " + myLayout.getElm_offsetTop(side);
+      
+            x += "\n Side Bottom : " + myLayout.getElm_Bottom(side);
+            x += "\n Side Height : " + myLayout.getElm_height(side);
+            x += "\n Side offsetHeight : " + myLayout.getElm_offsetHeight(side);
+
+            x += "\n-------Cont--------";
+            x += "\n contWrapper height : " + myLayout.getElm_height(contWrapper) + " offsetHeight : " + myLayout.getElm_offsetHeight(contWrapper);
+            x += "\n conHeight height : " + myLayout.getElm_height(cont) + " | conHeight height : " + myLayout.getElm_offsetHeight(cont);
+
+
+            alert(x);
+        }
+
+        
+        function setTop(topVal)
+        {
+            side.style.top = topVal + "px";
+        }
+
+
+        document.getElementById("btnGetData").onclick = function () { contClick() };
+        //document.body.onscroll = function () { resetSideBarHeight() };
+        document.onscroll = function () { resetSideBarHeight() };
+       
+        window.onresize = function () { resetSideBarHeight() };
+        document.getElementById("btnSetTop").onclick = function () { setTop(document.getElementById("txtTop").value) };
+        
+
+    </script>
+
+}
+
